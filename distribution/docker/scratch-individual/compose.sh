@@ -15,6 +15,7 @@ opts=$(getopt \
   --longoptions "splunk-pump" \
   --longoptions "influx-test-db" \
   --longoptions "prometheus-test-db" \
+  --longoptions "elk-test-db" \
   --longoptions "grafana" \
   -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -46,6 +47,7 @@ while [[ $# -gt 0 ]]; do
       echo "  demonstration test databases:"
       echo "    --influx-test-db"
       echo "    --prometheus-test-db"
+      echo "    --elk-test-db"
       echo
       exit 0
       ;;
@@ -66,6 +68,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prometheus-test-db)
       PROFILE_ARG="$PROFILE_ARG --profile prometheus-test-db"
+      ;;
+    --elk-test-db)
+      PROFILE_ARG="$PROFILE_ARG --profile elk-test-db"
       ;;
     --grafana)
       PROFILE_ARG="$PROFILE_ARG --profile grafana"
