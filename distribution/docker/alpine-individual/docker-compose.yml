@@ -1,0 +1,197 @@
+version: "3.9"
+
+x-env-mysql: &mysql-env
+  MYSQL_DATABASE: "telemetrysource_services_db"  #specify configured database name
+  MYSQL_USER: "reftools"           #sample reference - specify configured user name
+  MYSQL_PASSWORD: "*Ref!**lsq8#v*" #sample reference - specify configured credentials
+  MYSQL_HOST: "mysqldb"            #sample reference - specify mysql hostname
+  MYSQL_HOST_PORT: "3306"          #sample reference - specify mysql port number
+
+x-env-messagebus: &messagebus-env
+  MESSAGEBUS_HOST: activemq      #sample reference - specify messagebus hostname
+  MESSAGEBUS_PORT: 61613         #sample reference - specify messagebus port
+
+x-env-influx: &influx-env
+  INFLUXDB_SERVER: influx
+  INFLUXDB_DB: poweredge_telemetry_metrics
+  INFLUXDB_URL: http://influxdb:8086
+
+x-arg-base: &base-args
+  USER_ID: ${USER_ID:-0}
+  GROUP_ID: ${GROUP_ID:-0}
+  USERNAME: telemetry
+  GROUPNAME: telemetry
+
+x-build-base: &base-build
+    context: .
+    dockerfile: distribution/docker/alpine-individual/Dockerfile
+    args:
+      <<: *base-args
+
+x-refdaemon: &refdaemon
+  user: telemetry:telemetry
+  build:
+    <<: *base-build
+  environment:
+    <<: *mysql-env
+    <<: *messagebus-env
+  depends_on: ["mysqldb", "activemq"]
+  networks:
+    - private
+
+networks:
+  private:
+    driver: bridge
+
+volumes:
+  influxdb-storage:
+  grafana-storage:
+
+services:
+  activemq:
+    image: rmohr/activemq:5.10.0 
+    container_name: activemq
+    networks:
+      - private
+
+  mysqldb:
+    image: mysql:latest
+    restart: always
+    container_name: mysqldb
+    environment:
+      <<: *mysql-env
+      MYSQL_ROOT_PASSWORD: "bananas"   #sample reference - specify configured credentials
+    networks:
+      - private
+    #mount deployed mysql filesystem location for persistance
+
+  influx:
+    image: influxdb:1.8
+    volumes:
+      - influxdb-storage:/var/lib/influxdb
+    container_name: influx
+    environment:
+      <<: *influx-env
+      node.name: influx
+    networks:
+      - private
+    healthcheck:
+      test: curl http://localhost:8086 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana-provisioning/:/etc/grafana/provisioning
+    depends_on: 
+      - "influx"
+    container_name: grafana
+    environment:
+      <<: *influx-env
+    networks:
+      - private
+
+
+  configui:
+    <<: *refdaemon
+    image: telemetry-reference-tools/configui:latest
+    build:
+      <<: *base-build
+      args:
+        <<: *base-args
+        CMD: configui
+    environment:
+      <<: *mysql-env
+      <<: *messagebus-env
+      CONFIGUI_HTTP_PORT: 8082       #sample reference - specify web application port
+    ports:
+      - "8082:8080"
+
+
+  dbdiscauth:
+    <<: *refdaemon
+    image: telemetry-reference-tools/dbdiscauth:latest
+    build:
+      <<: *base-build
+      args:
+        <<: *base-args
+        CMD: dbdiscauth
+
+
+  redfishread:
+    <<: *refdaemon
+    image: telemetry-reference-tools/redfishread:latest
+    build:
+      <<: *base-build
+      args:
+        <<: *base-args
+        CMD: redfishread
+
+
+  prometheuspump:
+    <<: *refdaemon
+    image: telemetry-reference-tools/prometheuspump:latest
+    build:
+      <<: *base-build
+      args:
+        <<: *base-args
+        CMD: prometheuspump
+
+
+  influxpump:
+    <<: *refdaemon
+    image: telemetry-reference-tools/influxpump:latest
+    build:
+      <<: *base-build
+      args:
+        <<: *base-args
+        CMD: influxpump
+
+
+# elkpump seems to currently have a compile error and breaks
+# as of current latest git commit: 0016fcbbcc01404a1e3b6884299b1dcf2a214e9c
+#
+#  elkpump:
+#    <<: *refdaemon
+#    image: telemetry-reference-tools/elkpump:latest
+#    build:
+#      <<: *base-build
+#      args:
+#        <<: *base-args
+#        CMD: elkpump
+#    environment: []
+#    depends_on: []
+#    volumes: []
+
+
+# using dbdiscauth for now
+#
+#  simpleauth:
+#    <<: *refdaemon
+#    image: telemetry-reference-tools/simpleauth:latest
+#    build:
+#      <<: *base-build
+#      args:
+#        <<: *base-args
+#        CMD: simpleauth
+#    environment: []
+#    depends_on: []
+#    volumes: []
+#
+#
+#  simpledisc:
+#    <<: *refdaemon
+#    image: telemetry-reference-tools/simpledisc:latest
+#    build:
+#      <<: *base-build
+#      args:
+#        <<: *base-args
+#        CMD: simpledisc
+#    environment: []
+#    depends_on: []
+#    volumes: []
+
+
