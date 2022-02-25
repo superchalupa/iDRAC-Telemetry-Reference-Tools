@@ -94,11 +94,11 @@ echo "GROUP_ID=$(id -g)" >> $topdir/.env
 
 case $1 in
   stop)
-    docker-compose --project-dir $topdir -f $scriptdir/docker-compose.yml rm -f
+    docker-compose --project-directory $topdir -f $scriptdir/docker-compose.yml rm -f
     ;;
 
   start)
-    docker-compose --project-dir $topdir -f $scriptdir/docker-compose.yml ${PROFILE_ARG} up ${BUILD_ARG}
+    docker-compose --project-directory $topdir -f $scriptdir/docker-compose.yml ${PROFILE_ARG} up ${BUILD_ARG}
     ;;
 
   *)
