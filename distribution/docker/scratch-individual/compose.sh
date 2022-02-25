@@ -1,18 +1,14 @@
-#!/bin/sh
-
+#!/bin/sh 
 scriptdir=$(cd $(dirname $0); pwd)
 topdir=$(cd $scriptdir/../../..; pwd)
 cd $topdir
 
-set -e
-
-# Can automatically rebuild docker images if needed
-echo "USER_ID=$(id -u)" > $topdir/.env
-echo "GROUP_ID=$(id -g)" >> $topdir/.env
 PROFILE_ARG=
+BUILD_ARG=
 
 opts=$(getopt \
-  -n $0 \
+  -n $(basename $0) \
+  -o h \
   --longoptions "build" \
   --longoptions "influx-pump" \
   --longoptions "prometheus-pump" \
@@ -21,14 +17,38 @@ opts=$(getopt \
   --longoptions "prometheus-test-db" \
   --longoptions "grafana" \
   -- "$@")
-if [ $? -ne 0 ]; then
-  echo "options not recognized"
-  exit 1
+if [[ $? -ne 0 ]]; then
+  opts="-h"
+  echo
 fi
+
+set -e
+
 eval set -- "$opts"
-while true; do
-  echo "processing arg: $1"
+while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h)
+      echo "Usage:  $(basename $0) (start|stop) [--build] [PROFILE...]"
+      echo
+      echo "Args:"
+      echo "  start      Start up dockerized telemetry services"
+      echo "  stop       Stop telemetry services"
+      echo
+      echo "Flags:"
+      echo "  --build    (Re-)build the docker containers from source"
+      echo
+      echo "PROFILES:"
+      echo "  Pump sets:  in addition to core services. useful when connecting to standalone databases."
+      echo "    --influx-pump"
+      echo "    --prometheus-pump"
+      echo "    --splunk-pump"
+      echo
+      echo "  demonstration test databases:"
+      echo "    --influx-test-db"
+      echo "    --prometheus-test-db"
+      echo
+      exit 0
+      ;;
     --build)
       BUILD_ARG="--build --remove-orphans"
       ;;
@@ -58,6 +78,9 @@ while true; do
   shift
 done
 
+# make container user UID match calling user so that containers dont leave droppings we cant remove
+echo "USER_ID=$(id -u)" > $topdir/.env
+echo "GROUP_ID=$(id -g)" >> $topdir/.env
 
 case $1 in
   stop)
