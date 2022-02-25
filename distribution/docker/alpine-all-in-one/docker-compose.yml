@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  telemetry-all-in-one:
+    build:
+      context: .
+      dockerfile: distribution/docker/alpine-all-in-one/Dockerfile
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}
+    user: telemetry
+    image: telemetry-all-in-one:latest
+    environment:
+      EXAMPLE_ENV_VAR: Something
+    depends_on: []
+    volumes:
+      - ../data/:/data
