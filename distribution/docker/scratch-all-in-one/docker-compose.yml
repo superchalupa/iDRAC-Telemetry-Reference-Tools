@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+#######################################################################################
+##                                                                                   ##
+##                                Dell "Cloud" Services                              ##
+##                                                                                   ##
+#######################################################################################
+
+# remove later if unused
+#  mqttserver:
+#    image: volantmq/volantmq
+#    environment:
+#      - VOLANTMQ_CONFIG=/etc/volantmq/config.yaml
+#    volumes:
+#      - ../monmon/volant.yaml:/etc/volantmq/config.yaml
+
+  telemetry-all-in-one:
+    build:
+      context: .
+      dockerfile: distribution/docker/scratch-all-in-one/Dockerfile
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}
+    user: telemetry
+    image: telemetry-all-in-one:latest
+    environment:
+      EXAMPLE_ENV_VAR: Something
+    depends_on: []
+    volumes:
+      - ../data/:/data

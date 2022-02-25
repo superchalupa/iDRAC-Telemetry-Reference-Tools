@@ -2,3 +2,6 @@
 vendor/
 
 .idea/
+
+# used by docker-compose. never check in
+.env
