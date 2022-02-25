@@ -1,19 +1,5 @@
 version: "3.9"
 services:
-#######################################################################################
-##                                                                                   ##
-##                                Dell "Cloud" Services                              ##
-##                                                                                   ##
-#######################################################################################
-
-# remove later if unused
-#  mqttserver:
-#    image: volantmq/volantmq
-#    environment:
-#      - VOLANTMQ_CONFIG=/etc/volantmq/config.yaml
-#    volumes:
-#      - ../monmon/volant.yaml:/etc/volantmq/config.yaml
-
   telemetry-all-in-one:
     build:
       context: .
