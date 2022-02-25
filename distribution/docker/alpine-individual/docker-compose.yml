@@ -35,6 +35,7 @@ x-refdaemon: &refdaemon
   environment:
     <<: *mysql-env
     <<: *messagebus-env
+    <<: *influx-env
   depends_on: ["mysqldb", "activemq"]
   networks:
     - private
@@ -49,7 +50,7 @@ volumes:
 
 services:
   activemq:
-    image: rmohr/activemq:5.10.0 
+    image: rmohr/activemq:5.10.0
     container_name: activemq
     networks:
       - private
@@ -60,6 +61,7 @@ services:
     container_name: mysqldb
     environment:
       <<: *mysql-env
+      # this should only be passed to mysqldb, not needed by other daemons and would be security issue if leaked
       MYSQL_ROOT_PASSWORD: "bananas"   #sample reference - specify configured credentials
     networks:
       - private
@@ -86,7 +88,7 @@ services:
     volumes:
       - grafana-storage:/var/lib/grafana
       - ./grafana-provisioning/:/etc/grafana/provisioning
-    depends_on: 
+    depends_on:
       - "influx"
     container_name: grafana
     environment:

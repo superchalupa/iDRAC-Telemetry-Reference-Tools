@@ -22,8 +22,12 @@ case $1 in
     docker-compose --project-dir $topdir -f $scriptdir/docker-compose.yml rm -f
     ;;
 
-  start)
+  build-and-start)
     docker-compose --project-dir $topdir -f $scriptdir/docker-compose.yml up --build --remove-orphans
+    ;;
+
+  start)
+    docker-compose --project-dir $topdir -f $scriptdir/docker-compose.yml up
     ;;
 
   *)
