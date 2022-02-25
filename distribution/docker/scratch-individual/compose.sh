@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/bash 
 scriptdir=$(cd $(dirname $0); pwd)
 topdir=$(cd $scriptdir/../../..; pwd)
 cd $topdir
